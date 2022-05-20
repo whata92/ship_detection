@@ -4,6 +4,7 @@ import random
 import logging
 import numpy as np
 
+from utils.engine import train_one_epoch, evaluate
 from model.mask_rcnn import get_model_instance_segmentation
 from dataloader.dataset import AirbusDS, get_dataloader
 
@@ -28,24 +29,40 @@ seed_everything(SEED)
 if __name__ == "__main__":
     EPOCHS = 5
     clipping_value = 5
-    model = get_model_instance_segmentation(num_classes=2)
-
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.0001, momentum=0.9, weight_decay=0.0005)
-
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    model = get_model_instance_segmentation(num_classes=2)
+    model.to(device)
+    params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
-    dataset = AirbusDS(
-        dataset_root="/home/ubuntu/workspace/Airbus_ship/dataset",
+    train_dataset = AirbusDS(
+        dataset_csv="/home/ubuntu/workspace/Airbus_ship/dataset/train.csv",
+        dataset_root="/home/ubuntu/workspace/Airbus_ship/dataset/train_v2",
         aug=True
     )
-    train_dataloader = get_dataloader(dataset)
-    model.train()
-    model.to(device)
+
+    val_dataset = AirbusDS(
+        dataset_csv="/home/ubuntu/workspace/Airbus_ship/dataset/val.csv",
+        dataset_root="/home/ubuntu/workspace/Airbus_ship/dataset/train_v2",
+        aug=True
+    )
+
+    train_dataloader = get_dataloader(train_dataset)
+    val_dataloader = get_dataloader(val_dataset)
 
     for epoch in range(EPOCHS):
+        # train_one_epoch(
+        #     model,
+        #     optimizer,
+        #     train_dataloader,
+        #     device,
+        #     epoch,
+        #     print_freq=100
+        # )
 
         for i, batch in enumerate(train_dataloader):
+            model.train()
             images, targets = batch
 
             images = list(image.to(device) for image in images)
@@ -62,6 +79,10 @@ if __name__ == "__main__":
             torch.nn.utils.clip_grad_norm_(model.parameters(), clipping_value)
             optimizer.step()
 
+            if i == 1000:
+                lr_scheduler.step()
+
             if (i + 1) % 10 == 0:
                 # TODO: Add evaluation algorithm
                 print(f"epoch #{epoch + 1} Iteration #{i + 1} loss: {loss_value}")
+                evaluate(model, val_dataloader, device=device)

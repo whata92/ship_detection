@@ -18,7 +18,7 @@ class AirbusDS(Dataset):
     A customized data loader.
     """
     def __init__(
-        self, dataset_root="/workspace/dataset", aug=False, mode='train'
+        self, dataset_csv, dataset_root, aug=False, mode='train'
     ):
         """ Intialize the dataset
         """
@@ -26,18 +26,16 @@ class AirbusDS(Dataset):
         self.root = dataset_root
         self.aug = aug
         self.mode = 'test'
-        if mode == 'train':
-            self.mode = 'train'
-            self.masks = pd.read_csv(
-                os.path.join(self.root, 'train_extracted.csv')
-            ).fillna(-1)
+        if mode in ['train', 'val']:
+            self.mode = mode
+            self.masks = pd.read_csv(dataset_csv).fillna(-1)
         if self.aug:
             self.transform = get_train_transforms()
         else:
             self.transform = get_valid_transforms()
 
         self.filenames = [
-            os.path.join(self.root, "train_v2", fstem)
+            os.path.join(self.root, fstem)
             for fstem in list(self.masks["ImageId"])
         ]
         self.len = len(self.filenames)
@@ -79,10 +77,10 @@ class AirbusDS(Dataset):
         """
         image = Image.open(self.filenames[idx])
         ImageId = self.filenames[idx].split('/')[-1]
-        if self.mode == 'train':
+        if self.mode in ['train', 'val']:
             mask, bbox = self.get_mask_boxes(ImageId)
         if self.aug:
-            if self.mode == 'train':
+            if self.mode in ['train', 'val']:
                 data = {
                     "image": np.array(image),
                     "mask": mask,
@@ -93,20 +91,19 @@ class AirbusDS(Dataset):
                 data = {"image": np.array(image)}
             transformed = self.transform(**data)
             image = transformed["image"]
-            if self.mode == 'train':
-                if self.mode == 'train':
-                    num_objs = len(bbox)
-                    target = {}
-                    target["boxes"] = torch.as_tensor(
-                        transformed["bboxes"], dtype=torch.float32
-                    )
-                    target["masks"] = (
-                        transformed["mask"][np.newaxis, : , :].to(torch.uint8)
-                    )
-                    target["labels"] = torch.ones((num_objs, ), dtype=torch.int64)
-                    target["area"] = torch.Tensor(self.calc_area(transformed["bboxes"]))
-                    target["iscrowd"] = torch.zeros((num_objs, ), dtype=torch.int64)
-                    target["image_id"] = torch.Tensor([idx])
+            if self.mode in ['train', 'val']:
+                num_objs = len(bbox)
+                target = {}
+                target["boxes"] = torch.as_tensor(
+                    transformed["bboxes"], dtype=torch.float32
+                )
+                target["masks"] = (
+                    transformed["mask"][np.newaxis, : , :].to(torch.uint8)
+                )
+                target["labels"] = torch.ones((num_objs, ), dtype=torch.int64)
+                target["area"] = torch.Tensor(self.calc_area(transformed["bboxes"]))
+                target["iscrowd"] = torch.zeros((num_objs, ), dtype=torch.int64)
+                target["image_id"] = torch.Tensor([idx])
                 return image, target
             else:
                 return image
