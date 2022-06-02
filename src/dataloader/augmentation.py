@@ -40,7 +40,7 @@ def get_train_transforms():
             format='pascal_voc',
             min_area=0,
             min_visibility=0,
-            label_fields=['labels']
+            label_fields=['category_id']
         )
     )
 
@@ -48,7 +48,8 @@ def get_train_transforms():
 def get_valid_transforms():
     return A.Compose(
         [
-            A.Resize(height=512, width=512, p=1.0),
+            # A.Resize(height=512, width=512, p=1.0),
+            A.augmentations.transforms.Normalize(p=1.0),
             ToTensorV2(p=1.0),
         ],
         p=1.0,
@@ -56,6 +57,6 @@ def get_valid_transforms():
             format='pascal_voc',
             min_area=0,
             min_visibility=0,
-            label_fields=['labels']
+            label_fields=['category_id']
         )
     )

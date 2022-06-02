@@ -6,6 +6,7 @@ import numpy as np
 from skimage.measure import regionprops
 from torch.utils.data import Dataset, DataLoader
 from typing import Callable, List
+from pycocotools.coco import COCO
 
 from .augmentation import (
     get_train_transforms,
@@ -18,27 +19,23 @@ class AirbusDS(Dataset):
     A customized data loader.
     """
     def __init__(
-        self, dataset_csv, dataset_root, aug=False, mode='train'
+        self, dataset_file, dataset_root, aug=False, mode='train'
     ):
         """ Intialize the dataset
         """
-        self.filenames = []
         self.root = dataset_root
         self.aug = aug
         self.mode = 'test'
         if mode in ['train', 'val']:
             self.mode = mode
-            self.masks = pd.read_csv(dataset_csv).fillna(-1)
+            self.coco = COCO(dataset_file)
         if self.aug:
             self.transform = get_train_transforms()
         else:
             self.transform = get_valid_transforms()
 
-        self.filenames = [
-            os.path.join(self.root, fstem)
-            for fstem in list(self.masks["ImageId"])
-        ]
-        self.len = len(self.filenames)
+        self.img_ids = self.coco.getImgIds()
+        self.len = len(self.img_ids)
 
     # You must override __getitem__ and __len__
     def get_mask_boxes(self, ImageId):
@@ -75,8 +72,10 @@ class AirbusDS(Dataset):
     def __getitem__(self, idx):
         """ Get a sample from the dataset
         """
-        image = Image.open(self.filenames[idx])
-        ImageId = self.filenames[idx].split('/')[-1]
+        img_info = self.coco.loadImgs(self.img_ids[idx])[0]
+        image = Image.open(
+            os.path.join(self.root, self.mode, img_info["file_name"])
+        )
         if self.mode in ['train', 'val']:
             mask, bbox = self.get_mask_boxes(ImageId)
         if self.aug:
@@ -115,6 +114,81 @@ class AirbusDS(Dataset):
         Total number of samples in the dataset
         """
         return self.len
+
+
+class CocoDataset(Dataset):
+    def __init__(self, dataset_dir, ann_file, mode, transforms=None):
+        ann_file = os.path.join(dataset_dir, "annotation", ann_file)
+        self.imgs_dir = os.path.join(dataset_dir, mode)
+        self.coco = COCO(ann_file)
+        self.img_ids = self.coco.getImgIds()
+
+        self.transforms = transforms
+
+    def __getitem__(self, idx):
+        '''
+        Args:
+            idx: index of sample to be fed
+        return:
+            dict containing:
+            - PIL Image of shape (H, W)
+            - target (dict) containing:
+                - boxes:    FloatTensor[N, 4], N being the n° of instances and it's bounding
+                boxe coordinates in [x0, y0, x1, y1] format, ranging from 0 to W and 0 to H;
+                - labels:   Int64Tensor[N], class label (0 is background);
+                - image_id: Int64Tensor[1], unique id for each image;
+                - area:     Tensor[N], area of bbox;
+                - iscrowd:  UInt8Tensor[N], True or False;
+                - masks:    UInt8Tensor[N, H, W], segmantation maps;
+        '''
+        img_id = self.img_ids[idx]
+        img_obj = self.coco.loadImgs(img_id)[0]
+        anns_obj = self.coco.loadAnns(self.coco.getAnnIds(img_id))
+        num_obj = len(anns_obj)
+
+        img = Image.open(os.path.join(self.imgs_dir, img_obj['file_name']))
+
+        # list comprhenssion is too slow, might be better changing it
+        # bboxes = [ann["bbox"] for ann in anns_obj]
+        bboxes = [
+            [
+                ann['bbox'][0],
+                ann['bbox'][1],
+                ann['bbox'][0] + ann['bbox'][2],
+                ann['bbox'][1] + ann['bbox'][3]
+            ] for ann in anns_obj
+        ]
+        # bboxes = ? from [x, y, w, h] to [x0, y0, x1, y1]
+        masks = [self.coco.annToMask(ann) for ann in anns_obj]
+        areas = [ann['area'] for ann in anns_obj]
+
+        target = {}
+        if self.transforms is not None:
+            data = {
+                "image": np.array(img),
+                "mask": np.array(masks),
+                "bboxes": bboxes,
+                "category_id": np.array([1 for _ in bboxes])
+            }
+            transformed = self.transforms(**data)
+            img = transformed["image"]
+            target["boxes"] = transformed["bboxes"]
+            target["masks"] = transformed["mask"]
+        else:
+            target["boxes"] = bboxes
+            target["masks"] = np.array(masks)
+        target["labels"] = torch.ones((num_obj, ), dtype=torch.int64)
+
+        target["boxes"] = torch.as_tensor(target["boxes"], dtype=torch.float32)
+        target["masks"] = torch.as_tensor(target["masks"], dtype=torch.uint8)
+        target["image_id"] = torch.tensor([img_id])
+        target["area"] = torch.as_tensor(areas)
+        target["iscrowd"] = torch.zeros(len(anns_obj), dtype=torch.int64)
+
+        return img, target
+
+    def __len__(self):
+        return len(self.img_ids)
 
 
 def rle_decode(mask_rle, shape=(768, 768)):
