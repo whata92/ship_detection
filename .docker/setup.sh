@@ -2,7 +2,7 @@
 # You need to change followings:
 DIR_DOCKER_FILE="./.docker"
 DOCKER_IMAGE_NAME="whata:latest"
-DOCKER_CONTAINER_NAME="whata/satlib"
+DOCKER_CONTAINER_NAME="whata_satlib"
 MEMORY="32G"
 
 echo "*******************************"
