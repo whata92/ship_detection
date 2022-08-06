@@ -1,8 +1,8 @@
 #!/bin/bash
 # You need to change followings:
 DIR_DOCKER_FILE="./.docker"
-DOCKER_IMAGE_NAME="whatakeyama/satlib:latest"
-DOCKER_CONTAINER_NAME="whatakeyama_timm"
+DOCKER_IMAGE_NAME="whata:latest"
+DOCKER_CONTAINER_NAME="whata/satlib"
 MEMORY="32G"
 
 echo "*******************************"
