@@ -5,6 +5,7 @@ import random
 import numpy as np
 import torch
 import logging
+from datetime import datetime
 
 sys.path.append("/workspace")
 
@@ -17,6 +18,10 @@ from configs.default import get_cfg_from_file
 
 init_log("global", "info")
 SEED = 42
+CHECKPOINT_ROOT = os.path.join(
+    "/workspace/checkpoints",
+    datetime.strftime(datetime.now(), "%Y%m%d_%H%M%S")
+)
 
 
 def seed_everything(seed):
@@ -49,6 +54,7 @@ if __name__ == "__main__":
     args = parser()
     logger.debug(f"config file: {args.cfg}")
     cfg = get_cfg_from_file(args.cfg)
+    os.makedirs(CHECKPOINT_ROOT, exist_ok=True)
 
     train_dataset = CocoDataset(
         img_dir=cfg.DATASET.TRAIN.IMAGE,
@@ -120,5 +126,8 @@ if __name__ == "__main__":
 
             if (i + 1) % 50 == 0:
                 evaluate(model, val_dataloader, device=device)
-                torch.save(model.state_dict(), f"iter_{i}.pth")
+                torch.save(
+                    model.state_dict(),
+                    os.path.join(CHECKPOINT_ROOT, f"iter_{i}.pth")
+                    )
                 logger.info(f"Saved weight: iter_{i}.pth")
