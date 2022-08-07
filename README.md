@@ -25,7 +25,6 @@ python3.9 src/tools/train.py --cfg configs/training/default.yaml
 ```
 
 - log file is stored in `/workspace/logs`
--
-
+- checkpoints are created in the `/workspace/checkpoints`
 
 ## Reference
