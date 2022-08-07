@@ -121,7 +121,7 @@ def evaluate(model, data_loader, device):
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    logger.info("Averaged stats:", metric_logger)
+    logger.info(metric_logger.__str__())
     coco_evaluator.synchronize_between_processes()
 
     # accumulate predictions from all images
