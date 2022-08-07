@@ -5,7 +5,7 @@ Summary of the PR and what does it change.
 #xx
 
 ## (optional) Checklist
-- [] xx
+- [ ] xx
 
 ## (optional) Deadline
 xx/xx
