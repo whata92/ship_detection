@@ -1,0 +1,18 @@
+DATASET:
+  TRAIN:
+    IMAGE: "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
+    ANNOTATION: "/workspace/dataset/train.json"
+  VAL:
+    IMAGE: "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
+    ANNOTATION: "/workspace/dataset/val.json"
+  NUM_CLASS: 2
+
+TRAIN:
+  EPOCH: 20
+  BATCH_SIZE: 4
+  OPTIMIZER:
+    LEARNING_RATE: 0.0001
+    MOMENTUM: 0.9
+    WEIGHT_DECAY: 0.0005
+    LR_STEP_SIZE: 3
+    LR_GAMMA: 0.1
