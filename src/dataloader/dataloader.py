@@ -1,4 +1,5 @@
 import os
+from typing import List
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -19,15 +20,24 @@ def get_dataloader(
     batch_size: int = 2,
     shuffle: bool = False,
     num_workers: int = 0,
-    collate_fn=collate_fn
+    collate_fn=collate_fn,
+    infer_mode: bool = False
 ):
-    dataloader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        num_workers=num_workers,
-        collate_fn=collate_fn
-    )
+    if infer_mode is False:
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            collate_fn=collate_fn
+        )
+    else:
+        dataloader = DataLoader(
+            dataset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=num_workers
+        )
     return dataloader
 
 
@@ -110,3 +120,22 @@ class CocoDataset(Dataset):
 
     def __len__(self):
         return len(self.img_ids)
+
+
+class InferDataset(Dataset):
+    def __init__(self, image_list: List):
+        self.image_list = image_list
+
+    def __len__(self):
+        return len(self.image_list)
+
+    def __getitem__(self, idx: int):
+        img_path = self.image_list[idx]
+
+        # Load image
+        img = Image.open(img_path)
+        img = np.array(img).transpose([2, 0, 1])
+
+        img = torch.as_tensor(img, dtype=torch.float32)
+
+        return img, img_path
