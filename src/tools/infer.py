@@ -95,12 +95,12 @@ if __name__ == "__main__":
             output["scores"] = output["scores"].to("cpu").numpy()
 
             result[img_path] = output
-            print(output)
 
     # Create output csv
 
     # Create output image
     for key in result.keys():
+        plt.figure()
         img_name = os.path.basename(key)
         img_numpy = np.array(Image.open(key))
         plt.imshow(img_numpy)
