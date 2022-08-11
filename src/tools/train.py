@@ -66,6 +66,8 @@ if __name__ == "__main__":
         ann_file=cfg.DATASET.VAL.ANNOTATION
     )
 
+    logger.info(f"Train length: {len(train_dataset)}, Val length: {len(val_dataset)}")
+
     train_dataloader = get_dataloader(
         train_dataset,
         batch_size=cfg.TRAIN.BATCH_SIZE
@@ -128,6 +130,6 @@ if __name__ == "__main__":
                 evaluate(model, val_dataloader, device=device)
                 torch.save(
                     model.state_dict(),
-                    os.path.join(CHECKPOINT_ROOT, f"iter_{i}.pth")
+                    os.path.join(CHECKPOINT_ROOT, f"epoch_{epoch + 1}_iter_{i + 1}.pth")
                     )
-                logger.info(f"Saved weight: iter_{i}.pth")
+                logger.info(f"Saved weight: epoch_{epoch + 1}_iter_{i + 1}.pth")
