@@ -10,6 +10,8 @@ _C.DATASET.TRAIN.ANNOTATION = "/workspace/dataset/train.json"
 _C.DATASET.VAL = CfgNode()
 _C.DATASET.VAL.IMAGE = "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
 _C.DATASET.VAL.ANNOTATION = "/workspace/dataset/val.json"
+_C.DATASET.INFERENCE = CfgNode()
+_C.DATASET.INFERENCE.IMAGE_FILE = "/workspace/dataset/infer_all.txt"
 _C.DATASET.NUM_CLASS = 2
 
 _C.TRAIN = CfgNode()

@@ -1,0 +1,4 @@
+DATASET:
+  INFERENCE:
+    IMAGE_FILE: "/workspace/dataset/infer.txt"
+  NUM_CLASS: 2
