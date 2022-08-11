@@ -72,6 +72,7 @@ if __name__ == "__main__":
         train_dataset,
         batch_size=cfg.TRAIN.BATCH_SIZE
     )
+
     val_dataloader = get_dataloader(
         val_dataset,
         batch_size=cfg.TRAIN.BATCH_SIZE
