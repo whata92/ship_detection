@@ -3,6 +3,11 @@ from yacs.config import CfgNode
 
 _C = CfgNode()
 
+_C.PREPROCESS = CfgNode()
+_C.PREPROCESS.WIDTH = 512
+_C.PREPROCESS.HEIGHT = 512
+_C.PREPROCESS.OVERLAP = 0.2
+
 _C.DATASET = CfgNode()
 _C.DATASET.TRAIN = CfgNode()
 _C.DATASET.TRAIN.IMAGE = "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
