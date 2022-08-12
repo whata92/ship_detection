@@ -1,3 +1,8 @@
+PREPROCESS:
+  WIDTH: 512
+  HEIGHT: 512
+  OVERLAP: 0.2
+
 DATASET:
   TRAIN:
     IMAGE: "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
