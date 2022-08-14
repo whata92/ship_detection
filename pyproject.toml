@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "ship_detection"
+version = "0.1.0"
+description = ""
+authors = ["waku_dell <waku.hatakeyama@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.23.1"
+opencv-python = "^4.6.0"
+flake8 = "^5.0.4"
+black = "^22.6.0"
+pytest = "^7.1.2"
+ipykernel = "^6.15.1"
+matplotlib = "^3.5.3"
+scikit-image = "^0.19.3"
+torch = "^1.12.1"
+torchvision = "^0.13.1"
+albumentations = "^1.2.1"
+pycocotools = "^2.0.4"
+yacs = "^0.1.8"
+xmltodict = "^0.13.0"
+geopandas = "^0.11.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
