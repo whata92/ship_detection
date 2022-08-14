@@ -8,10 +8,26 @@ sys.path.append(
     )
 )
 
-from src.utils.preprocessing_utils import (
+from utils.preprocessing_utils import (
+    crop_image,
     crop_xml,
     check_bbox_inside
 )
+
+
+def test_crop_img(default_path):
+    img_file = default_path["img"]
+    size = [512, 512]
+    overlap = 0
+    out_dir = "tests/tmp"
+    os.makedirs(out_dir, exist_ok=True)
+
+    try:
+        crop_image(img_file, size, out_dir, overlap, residual_crop=False)
+    finally:
+        pass
+        # shutil.rmtree(out_dir)
+    
 
 def test_crop_xml(default_path):
     xml_file = default_path["xml"]

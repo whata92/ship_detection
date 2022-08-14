@@ -1,12 +1,20 @@
+import os
 import argparse
 import sys
 import logging
 
-sys.path.append("/workspace")
+sys.path.append(
+    os.path.abspath(
+        os.path.dirname(os.path.abspath(__file__)) + "/../../"
+    )
+)
 
 from configs.default import get_cfg_from_file
 from src.utils.logger import init_log
-from src.utils.preprocessing_utils import crop_image
+from src.utils.preprocessing_utils import (
+    crop_image,
+    crop_xml,
+)
 
 init_log("global", "info")
 
@@ -21,8 +29,15 @@ def parser():
     )
     parser.add_argument(
         "--annotation_path",
-        dest="output_root",
+        dest="annotation_path",
         help="Path to the original annotation path",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--output_path",
+        dest="output_path",
+        help="Path to the output path",
         type=str,
         required=True
     )
@@ -42,15 +57,33 @@ if __name__ == "__main__":
     logger.debug(f"config file: {args.cfg}")
     cfg = get_cfg_from_file(args.cfg)
 
+    os.makedirs(args.output_path, exist_ok=True)
+
     # Get image and annotation path
 
     # Get the output folder
 
     # Get width, height and overlap of the output images
+    width = cfg["PREPROCESS"]["WIDTH"]
+    height = cfg["PREPROCESS"]["HEIGHT"]
+    overlap = cfg["PREPROCESS"]["OVERLAP"]
 
-    # Calculate steps of cropping
+    crop_image(
+        img_file=args.img_path, 
+        size=[height, width], 
+        out_dir=args.output_path,
+        overlap=0.2,
+        residual_crop=False
+    )
 
-    # load annotation file
+    crop_xml(
+        xml_file=args.annotation_path, 
+        size=[height, width], 
+        out_dir=args.output_path,
+        overlap=0.2,
+        residual_crop=False
+    )
+
 
     # Start for loop
 
