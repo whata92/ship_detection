@@ -73,11 +73,11 @@ def XML2JSON(xmlFiles):
     attrDict["annotations"] = annotations
     attrDict["type"] = "instances"
 
-    with open("dataset/val.json", "w") as f:
+    with open("test.json", "w") as f:
         json.dump(attrDict, f, indent=2)
 
 
 if __name__ == "__main__":
-    path = "/workspace/dataset/LS-SSDD-v1.0-OPEN/Annotations_sub"
-    trainXMLFiles = glob.glob(os.path.join(path, '1*.xml'))
+    path = "/home/ubuntu/workspace/ship_detection/output"
+    trainXMLFiles = glob.glob(os.path.join(path, '*.xml'))
     XML2JSON(trainXMLFiles)
