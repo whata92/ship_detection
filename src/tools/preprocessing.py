@@ -2,6 +2,7 @@ import os
 import argparse
 import sys
 import logging
+import glob
 
 sys.path.append(
     os.path.abspath(
@@ -14,6 +15,7 @@ from src.utils.logger import init_log
 from src.utils.preprocessing_utils import (
     crop_image,
     crop_xml,
+    item2object,
 )
 
 init_log("global", "info")
@@ -69,20 +71,27 @@ if __name__ == "__main__":
     overlap = cfg["PREPROCESS"]["OVERLAP"]
 
     crop_image(
-        img_file=args.img_path, 
-        size=[height, width], 
+        img_file=args.img_path,
+        size=[height, width],
         out_dir=args.output_path,
         overlap=0.2,
         residual_crop=False
     )
 
     crop_xml(
-        xml_file=args.annotation_path, 
-        size=[height, width], 
+        xml_file=args.annotation_path,
+        size=[height, width],
         out_dir=args.output_path,
         overlap=0.2,
         residual_crop=False
     )
+
+    xml_list = glob.glob(
+        os.path.join(args.output_path, "*.xml")
+    )
+
+    for xml in xml_list:
+        item2object(xml)
 
 
     # Start for loop

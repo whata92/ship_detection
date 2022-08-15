@@ -4,19 +4,23 @@ import dicttoxml
 from PIL import Image
 from typing import List
 import numpy as np
+import logging
+
+
+logger = logging.getLogger("global.preprocessing_utils")
 
 Image.MAX_IMAGE_PIXELS = 1000000000
 
 def crop_image(
-    img_file: str, 
-    size: List[int], 
+    img_file: str,
+    size: List[int],
     out_dir: str,
     overlap: float = 0.2,
     residual_crop = False
 ) -> None:
 
     img_stem = os.path.splitext(os.path.basename(img_file))[0]
-    
+
     stride_x = int(size[0] * (1 - overlap))
     stride_y = int(size[1] * (1 - overlap))
 
@@ -43,15 +47,15 @@ def crop_image(
 
             fname = f"{img_stem}_{h_min}_{w_min}_{h_max}_{w_max}.jpg"
             out_img_path = os.path.join(out_dir, fname)
-            
+
             img_pil = Image.fromarray(cropped)
             img_pil.save(out_img_path)
-            # TODO: add logger
+            logger.info(f"Processed: {out_img_path}")
 
 
 def crop_xml(
-    xml_file: str, 
-    size: List[int], 
+    xml_file: str,
+    size: List[int],
     out_dir: str,
     overlap: float = 0.2,
     residual_crop = False
@@ -63,7 +67,7 @@ def crop_xml(
             fp.read(),
             force_list=('object')
         )
-    
+
     height = int(content["annotation"]["size"]["height"])
     width = int(content["annotation"]["size"]["width"])
     channel = int(content["annotation"]["size"]["depth"])
@@ -108,12 +112,12 @@ def crop_xml(
                     target["bndbox"]["ymax"] = int(target["bndbox"]["ymax"]) - h_min
                     xml_dict["annotation"]["object"].append(target)
             if len(xml_dict["annotation"]["object"]) > 0:
-                print(f'{fname}: {len(xml_dict["annotation"]["object"])}')
+                logger.info(f'{fname}: {len(xml_dict["annotation"]["object"])}')
                 with open(out_xml_path, 'w') as fp:
                     fp.write(
                         dicttoxml.dicttoxml(
-                            xml_dict, 
-                            attr_type=False, 
+                            xml_dict,
+                            attr_type=False,
                             root=False
                         ).decode("utf-8")
                     )
@@ -128,7 +132,7 @@ def check_bbox_inside(img_area: List[int], bbox: List[int]) -> bool:
         return True
     else:
         return False
-    
+
 
 def convert_bndbox_to_list(bndbox: dict) -> List[int]:
     x_min = int(bndbox["ymin"])  # bndbox's y axis -> vertical
@@ -156,3 +160,19 @@ def create_default_xml() -> dict:
             "object": []
         }
     }
+
+
+def item2object(xml_file: str):
+    with open(xml_file, "r") as fp:
+        original = fp.read()
+    if "<item>" not in original:
+        logger.warn("No item exists")
+        return
+    original = original.replace("<object>", "")
+    original = original.replace("</object>", "")
+    original = original.replace("<item>", "<object>")
+    original = original.replace("</item>", "</object>")
+    os.remove(xml_file)
+    with open(xml_file, "w") as fp:
+        fp.write(original)
+    logger.info(f"Processed: {xml_file}")
