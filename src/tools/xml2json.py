@@ -4,7 +4,7 @@ import xmltodict
 import json
 
 
-def XML2JSON(xmlFiles):
+def XML2JSON(xmlFiles: str, output_json: str):
     attrDict = dict()
     attrDict["categories"] = [
         {
@@ -73,11 +73,29 @@ def XML2JSON(xmlFiles):
     attrDict["annotations"] = annotations
     attrDict["type"] = "instances"
 
-    with open("dataset/val.json", "w") as f:
+    with open(output_json, "w") as f:
         json.dump(attrDict, f, indent=2)
 
 
 if __name__ == "__main__":
-    path = "/workspace/dataset/LS-SSDD-v1.0-OPEN/Annotations_sub"
-    trainXMLFiles = glob.glob(os.path.join(path, '1*.xml'))
-    XML2JSON(trainXMLFiles)
+    path = "/workspace/dataset/cropped_512"
+    trainXMLFiles = (
+        glob.glob(os.path.join(path, '01*.xml')) +
+        glob.glob(os.path.join(path, '02*.xml')) +
+        glob.glob(os.path.join(path, '03*.xml')) +
+        glob.glob(os.path.join(path, '04*.xml')) +
+        glob.glob(os.path.join(path, '05*.xml')) +
+        glob.glob(os.path.join(path, '06*.xml')) +
+        glob.glob(os.path.join(path, '07*.xml')) +
+        glob.glob(os.path.join(path, '08*.xml')) +
+        glob.glob(os.path.join(path, '09*.xml')) +
+        glob.glob(os.path.join(path, '10*.xml')) +
+        glob.glob(os.path.join(path, '11*.xml')) +
+        glob.glob(os.path.join(path, '12*.xml'))
+    )
+    valXMLFiles = (
+        glob.glob(os.path.join(path, '13*.xml')) +
+        glob.glob(os.path.join(path, '14*.xml'))
+    )
+    XML2JSON(trainXMLFiles, "dataset/train.json")
+    XML2JSON(valXMLFiles, "dataset/val.json")
