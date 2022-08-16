@@ -61,11 +61,6 @@ if __name__ == "__main__":
 
     os.makedirs(args.output_path, exist_ok=True)
 
-    # Get image and annotation path
-
-    # Get the output folder
-
-    # Get width, height and overlap of the output images
     width = cfg["PREPROCESS"]["WIDTH"]
     height = cfg["PREPROCESS"]["HEIGHT"]
     overlap = cfg["PREPROCESS"]["OVERLAP"]
@@ -92,10 +87,3 @@ if __name__ == "__main__":
 
     for xml in xml_list:
         item2object(xml)
-
-
-    # Start for loop
-
-    # Crop and save images by given coordinates
-
-    # Crop and save annotations by given coordinates

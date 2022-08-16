@@ -166,7 +166,7 @@ def item2object(xml_file: str):
     with open(xml_file, "r") as fp:
         original = fp.read()
     if "<item>" not in original:
-        logger.warn("No item exists")
+        logger.warn(f"No item exists: {xml_file}")
         return
     original = original.replace("<object>", "")
     original = original.replace("</object>", "")
