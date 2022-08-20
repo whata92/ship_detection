@@ -7,7 +7,8 @@ import torch
 import logging
 from datetime import datetime
 
-sys.path.append("/workspace")
+sys.path.append("/home/ubuntu/workspace/ship_detection")
+ROOT = "/home/ubuntu/workspace/ship_detection"
 
 from src.dataloader.dataloader import CocoDataset, get_dataloader
 from src.utils.engine import evaluate
@@ -19,7 +20,8 @@ from configs.default import get_cfg_from_file
 init_log("global", "info")
 SEED = 42
 CHECKPOINT_ROOT = os.path.join(
-    "/workspace/checkpoints",
+    ROOT,
+    "checkpoints",
     datetime.strftime(datetime.now(), "%Y%m%d_%H%M%S")
 )
 

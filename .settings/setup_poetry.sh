@@ -1,5 +1,9 @@
-sudo apt install -y \
+apt update -y
+
+apt install -y \
     gcc \
+    aws-cli \
+    nvidia-cuda-toolkit \
     make \
     build-essential \
     libssl-dev \

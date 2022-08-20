@@ -1,7 +1,6 @@
-FROM python
+FROM nvidia/cuda:10.2-base-ubuntu18.04
 LABEL maintainer="whata <waku.hatakeyama@gmail.com>"
 
-# install requirements
 RUN apt-get update -y \
   && apt-get install -y --no-install-recommends \
     sudo \
@@ -17,11 +16,6 @@ RUN apt-get update -y \
     jq \
     nfs-common \
     parallel \
-    python3.9 \
-    python3-dev \
-    python3-pip \
-    python3-wheel \
-    python3-setuptools \
     unzip \
 	  vim \
     wget \
@@ -29,11 +23,6 @@ RUN apt-get update -y \
     sshfs \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-# Create pipenv environment
-COPY requirements.txt /tmp
-RUN python3.9 -m pip install -r /tmp/requirements.txt
-
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /workspace

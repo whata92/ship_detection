@@ -2,7 +2,7 @@
 name = "ship_detection"
 version = "0.1.0"
 description = ""
-authors = ["waku_dell <waku.hatakeyama@gmail.com>"]
+authors = ["whata92 <waku.hatakeyama@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -14,14 +14,13 @@ pytest = "^7.1.2"
 ipykernel = "^6.15.1"
 matplotlib = "^3.5.3"
 scikit-image = "^0.19.3"
-torch = "^1.12.1"
-torchvision = "^0.13.1"
 albumentations = "^1.2.1"
 pycocotools = "^2.0.4"
 yacs = "^0.1.8"
 xmltodict = "^0.13.0"
 geopandas = "^0.11.1"
 dicttoxml = "^1.7.4"
+tensorboard = "^2.10.0"
 
 [tool.poetry.dev-dependencies]
 
