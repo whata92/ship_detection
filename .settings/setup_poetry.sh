@@ -1,3 +1,5 @@
+sudo apt update -y
+
 sudo apt install -y \
     gcc \
     make \

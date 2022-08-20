@@ -7,21 +7,25 @@ Ship detection for Sentinel-1 SAR image
 
 ## Installation
 
-1. Modify `.docker/setup.sh`
-2. Modify `.docker/requirement.txt`
-3. Run setup commands
+1. Install using `.settings/setup_poetry.sh`
 ```bash
-bash .docker setup.sh
+bash .settings/setup_poetry.sh
+source ~/.bash_profile
 ```
 
 ## Dataset
 - [LS-SSDD-v1.0](https://github.com/TianwenZhang0825/LS-SSDD-v1.0-OPEN)
 
 
+## Preprocessing
+```bash
+bash scripts/preprocessing.sh
+```
+
 ## Training
 
 ```bash
-python3.9 src/tools/train.py --cfg configs/training/default.yaml
+python src/tools/train.py --cfg configs/training/default.yaml
 ```
 
 - log file is stored in `/workspace/logs`
