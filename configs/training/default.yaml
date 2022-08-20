@@ -5,11 +5,11 @@ PREPROCESS:
 
 DATASET:
   TRAIN:
-    IMAGE: "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
-    ANNOTATION: "/workspace/dataset/train.json"
+    IMAGE: "/home/ubuntu/workspace/ship_detection/dataset/JPEGImages_sub"
+    ANNOTATION: "/home/ubuntu/workspace/ship_detection/dataset/train.json"
   VAL:
-    IMAGE: "/workspace/dataset/LS-SSDD-v1.0-OPEN/JPEGImages_sub"
-    ANNOTATION: "/workspace/dataset/val.json"
+    IMAGE: "/home/ubuntu/workspace/ship_detection/dataset/JPEGImages_sub"
+    ANNOTATION: "/home/ubuntu/workspace/ship_detection/dataset/val.json"
   NUM_CLASS: 2
 
 TRAIN:

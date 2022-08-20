@@ -2,7 +2,7 @@
 name = "ship_detection"
 version = "0.1.0"
 description = ""
-authors = ["waku_dell <waku.hatakeyama@gmail.com>"]
+authors = ["whata92 <waku.hatakeyama@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
