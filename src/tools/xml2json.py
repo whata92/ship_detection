@@ -78,7 +78,7 @@ def XML2JSON(xmlFiles: str, output_json: str):
 
 
 if __name__ == "__main__":
-    path = "/workspace/dataset/cropped_512"
+    path = "/home/ubuntu/workspace/ship_detection/dataset/cropped_512"
     trainXMLFiles = (
         glob.glob(os.path.join(path, '01*.xml')) +
         glob.glob(os.path.join(path, '02*.xml')) +
