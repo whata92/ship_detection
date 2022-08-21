@@ -3,7 +3,7 @@ from mmdet.apis import init_detector, inference_detector
 target = "12_6953_16360_7465_16872.jpg"
 # Specify the path to model config and checkpoint file
 config_file = '/home/ubuntu/workspace/ship_detection/model_configs/yolof/yolof_r50_c5_8x8_1x_coco.py'
-checkpoint_file = '/home/ubuntu/workspace/ship_detection/output/epoch_1.pth'
+checkpoint_file = '/home/ubuntu/workspace/ship_detection/output/epoch_5.pth'
 
 # build the model from a config file and a checkpoint file
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
