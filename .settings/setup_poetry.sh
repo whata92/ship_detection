@@ -20,7 +20,8 @@ apt install -y \
     tk-dev \
     libxml2-dev \
     libxmlsec1-dev \
-    liblzma-dev
+    liblzma-dev \
+    libgdal-dev
 
 # Insall pyenv
 
