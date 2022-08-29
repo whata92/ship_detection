@@ -15,9 +15,7 @@ def save_patch(
     x_max: int,
     y_min: int,
     y_max: int,
-    save_path: str,
-    save_png: bool = False,
-    color_band: List[int] = [0, 1, 2]
+    save_path: str
 ) -> None:
     """Creates and saves a patch of the input image
         given its pixel coordinates and save_path
@@ -30,8 +28,6 @@ def save_patch(
         y_min (int): Minimum y coordinate of the patch
         y_max (int): Maximum y coordinate of the patch
         save_path (str): Path to save the patch
-        save_png (bool): Whether save color png image for confirmation
-        color_band (List[int]): RGB composites when png is saved
     """
 
     crop_size = (x_max - x_min, y_max - y_min)
@@ -60,20 +56,13 @@ def save_patch(
 
         dst.write(crop_img)
 
-    if save_png:
-        save_path = save_path.replace(".tif", ".png")
-        crop_img = crop_img[color_band, :, :].transpose(1, 2, 0)
-        cv2.imwrite(save_path, crop_img)
-
 
 def crop_raster(
     input_img: str,
     save_dir: str,
     crop_size: List[int],
     overlap: List[int],
-    residual_cropping: bool = False,
-    save_png: bool = False,
-    color_band: List[int] = [0, 1, 2]
+    residual_cropping: bool = False
 ):
     """Crop raster into subgrids
     Args:
@@ -86,8 +75,6 @@ def crop_raster(
                                         aligned to the boarder, so that residuals
                                         are also in cropped subgrids.
                                         Defaults to False.
-        save_png (bool): Whether save color png image for confirmation
-        color_band (List[int]): RGB composites when png is saved
     """
 
     os.makedirs(save_dir, exist_ok=True)
@@ -121,7 +108,7 @@ def crop_raster(
 
                 save_path = os.path.join(save_dir, os.path.split(crop_img_name)[-1])
 
-                save_patch(src, img, x_min, x_max, y_min, y_max, save_path, save_png, color_band)
+                save_patch(src, img, x_min, x_max, y_min, y_max, save_path)
 
 
 def convert_img_to_np(
