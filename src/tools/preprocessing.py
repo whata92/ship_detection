@@ -10,7 +10,7 @@ sys.path.append(
     )
 )
 
-from configs.default import get_cfg_from_file
+from configs.preprocessing.default import get_cfg_from_file
 from src.utils.logger import init_log
 from src.utils.preprocessing_utils import (
     crop_image,
@@ -48,7 +48,7 @@ def parser():
         dest="cfg",
         help="Path to the config file",
         type=str,
-        default="configs/inference/default.yaml",
+        default="configs/preprocessing/default.yaml",
     )
     return parser.parse_args()
 

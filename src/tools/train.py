@@ -1,138 +1,241 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
-import sys
+import copy
 import os
-import random
-import numpy as np
+import time
+import warnings
+
+import mmcv
 import torch
-import logging
-from datetime import datetime
+import torch.distributed as dist
+from mmcv import Config, DictAction
+from mmcv.runner import get_dist_info, init_dist
+from mmcv.utils import get_git_hash
 
-sys.path.append("/home/ubuntu/workspace/ship_detection")
-ROOT = "/home/ubuntu/workspace/ship_detection"
-
-from src.dataloader.dataloader import CocoDataset, get_dataloader
-from src.utils.engine import evaluate
-from src.model.faster_rcnn import get_model_instance_segmentation
-from src.utils.logger import init_log
-from configs.default import get_cfg_from_file
-
-
-init_log("global", "info")
-SEED = 42
-CHECKPOINT_ROOT = os.path.join(
-    ROOT,
-    "checkpoints",
-    datetime.strftime(datetime.now(), "%Y%m%d_%H%M%S")
-)
+from mmdet import __version__
+from mmdet.apis import init_random_seed, set_random_seed, train_detector
+from mmdet.datasets import build_dataset
+from mmdet.models import build_detector
+from mmdet.utils import (collect_env, get_device, get_root_logger,
+                         replace_cfg_vals, setup_multi_processes,
+                         update_data_root)
 
 
-def seed_everything(seed):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
-
-
-seed_everything(SEED)
-
-
-def parser():
-    parser = argparse.ArgumentParser(description="Train the model")
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train a detector')
+    parser.add_argument('--config', help='train config file path')
+    parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
-        "--cfg",
-        dest="cfg",
-        help="Path to the config file",
-        type=str,
-        default="configs/training/default.yaml",
-    )
-    return parser.parse_args()
+        '--resume-from', help='the checkpoint file to resume from')
+    parser.add_argument(
+        '--auto-resume',
+        action='store_true',
+        help='resume from the latest checkpoint automatically')
+    parser.add_argument(
+        '--no-validate',
+        action='store_true',
+        help='whether not to evaluate the checkpoint during training')
+    group_gpus = parser.add_mutually_exclusive_group()
+    group_gpus.add_argument(
+        '--gpus',
+        type=int,
+        help='(Deprecated, please use --gpu-id) number of gpus to use '
+        '(only applicable to non-distributed training)')
+    group_gpus.add_argument(
+        '--gpu-ids',
+        type=int,
+        nargs='+',
+        help='(Deprecated, please use --gpu-id) ids of gpus to use '
+        '(only applicable to non-distributed training)')
+    group_gpus.add_argument(
+        '--gpu-id',
+        type=int,
+        default=0,
+        help='id of gpu to use '
+        '(only applicable to non-distributed training)')
+    parser.add_argument('--seed', type=int, default=None, help='random seed')
+    parser.add_argument(
+        '--diff-seed',
+        action='store_true',
+        help='Whether or not set different seeds for different ranks')
+    parser.add_argument(
+        '--deterministic',
+        action='store_true',
+        help='whether to set deterministic options for CUDNN backend.')
+    parser.add_argument(
+        '--options',
+        nargs='+',
+        action=DictAction,
+        help='override some settings in the used config, the key-value pair '
+        'in xxx=yyy format will be merged into config file (deprecate), '
+        'change to --cfg-options instead.')
+    parser.add_argument(
+        '--cfg-options',
+        nargs='+',
+        action=DictAction,
+        help='override some settings in the used config, the key-value pair '
+        'in xxx=yyy format will be merged into config file. If the value to '
+        'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
+        'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
+        'Note that the quotation marks are necessary and that no white space '
+        'is allowed.')
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='job launcher')
+    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument(
+        '--auto-scale-lr',
+        action='store_true',
+        help='enable automatically scaling LR.')
+    args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
+
+    if args.options and args.cfg_options:
+        raise ValueError(
+            '--options and --cfg-options cannot be both '
+            'specified, --options is deprecated in favor of --cfg-options')
+    if args.options:
+        warnings.warn('--options is deprecated in favor of --cfg-options')
+        args.cfg_options = args.options
+
+    return args
 
 
-if __name__ == "__main__":
-    logger = logging.getLogger("global")
-    args = parser()
-    logger.debug(f"config file: {args.cfg}")
-    cfg = get_cfg_from_file(args.cfg)
-    os.makedirs(CHECKPOINT_ROOT, exist_ok=True)
+def main():
+    args = parse_args()
 
-    train_dataset = CocoDataset(
-        img_dir=cfg.DATASET.TRAIN.IMAGE,
-        ann_file=cfg.DATASET.TRAIN.ANNOTATION,
-    )
+    cfg = Config.fromfile(args.config)
 
-    val_dataset = CocoDataset(
-        img_dir=cfg.DATASET.VAL.IMAGE,
-        ann_file=cfg.DATASET.VAL.ANNOTATION
-    )
+    # replace the ${key} with the value of cfg.key
+    cfg = replace_cfg_vals(cfg)
 
-    logger.info(f"Train length: {len(train_dataset)}, Val length: {len(val_dataset)}")
+    # update data root according to MMDET_DATASETS
+    update_data_root(cfg)
 
-    train_dataloader = get_dataloader(
-        train_dataset,
-        batch_size=cfg.TRAIN.BATCH_SIZE
-    )
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
 
-    val_dataloader = get_dataloader(
-        val_dataset,
-        batch_size=cfg.TRAIN.BATCH_SIZE
-    )
+    if args.auto_scale_lr:
+        if 'auto_scale_lr' in cfg and \
+                'enable' in cfg.auto_scale_lr and \
+                'base_batch_size' in cfg.auto_scale_lr:
+            cfg.auto_scale_lr.enable = True
+        else:
+            warnings.warn('Can not find "auto_scale_lr" or '
+                          '"auto_scale_lr.enable" or '
+                          '"auto_scale_lr.base_batch_size" in your'
+                          ' configuration file. Please update all the '
+                          'configuration files to mmdet >= 2.24.1.')
 
-    device = (
-        torch.device('cuda')
-        if torch.cuda.is_available() else torch.device('cpu')
-    )
-    logger.debug(f"device: {device}")
+    # set multi-process settings
+    setup_multi_processes(cfg)
 
-    model = get_model_instance_segmentation(num_classes=cfg.DATASET.NUM_CLASS)
-    model.to(device)
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(
-        params,
-        lr=cfg.TRAIN.OPTIMIZER.LEARNING_RATE,
-        momentum=cfg.TRAIN.OPTIMIZER.MOMENTUM,
-        weight_decay=cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY
-    )
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(
-        optimizer,
-        step_size=cfg.TRAIN.OPTIMIZER.LR_STEP_SIZE,
-        gamma=cfg.TRAIN.OPTIMIZER.LR_GAMMA
-    )
+    # set cudnn_benchmark
+    if cfg.get('cudnn_benchmark', False):
+        torch.backends.cudnn.benchmark = True
 
-    for epoch in range(cfg.TRAIN.EPOCH):
-        for i, batch in enumerate(train_dataloader):
-            model.train()
-            images, targets = batch
+    # work_dir is determined in this priority: CLI > segment in file > filename
+    if args.work_dir is not None:
+        # update configs according to CLI args if args.work_dir is not None
+        cfg.work_dir = args.work_dir
+    elif cfg.get('work_dir', None) is None:
+        # use config filename as default work_dir if cfg.work_dir is None
+        cfg.work_dir = os.path.join('./work_dirs',
+                                os.path.splitext(os.path.basename(args.config))[0])
 
-            images = list(image.to(device) for image in images)
-            targets = [
-                {k: v.to(device) for k, v in t.items()} for t in targets
-            ]
+    if args.resume_from is not None:
+        cfg.resume_from = args.resume_from
+    cfg.auto_resume = args.auto_resume
+    if args.gpus is not None:
+        cfg.gpu_ids = range(1)
+        warnings.warn('`--gpus` is deprecated because we only support '
+                      'single GPU mode in non-distributed training. '
+                      'Use `gpus=1` now.')
+    if args.gpu_ids is not None:
+        cfg.gpu_ids = args.gpu_ids[0:1]
+        warnings.warn('`--gpu-ids` is deprecated, please use `--gpu-id`. '
+                      'Because we only support single GPU mode in '
+                      'non-distributed training. Use the first GPU '
+                      'in `gpu_ids` now.')
+    if args.gpus is None and args.gpu_ids is None:
+        cfg.gpu_ids = [args.gpu_id]
 
-            loss_dict = model(images, targets)
+    # init distributed env first, since logger depends on the dist info.
+    if args.launcher == 'none':
+        distributed = False
+    else:
+        distributed = True
+        init_dist(args.launcher, **cfg.dist_params)
+        # re-set gpu_ids with distributed training mode
+        _, world_size = get_dist_info()
+        cfg.gpu_ids = range(world_size)
 
-            losses = sum(loss for loss in loss_dict.values())
-            loss_value = losses.item()
+    # create work_dir
+    mmcv.mkdir_or_exist(os.path.abspath(cfg.work_dir))
+    # dump config
+    cfg.dump(os.path.join(cfg.work_dir, os.path.basename(args.config)))
+    # init the logger before other steps
+    timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+    log_file = os.path.join(cfg.work_dir, f'{timestamp}.log')
+    logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
 
-            optimizer.zero_grad()
-            losses.backward()
+    # init the meta dict to record some important information such as
+    # environment info and seed, which will be logged
+    meta = dict()
+    # log env info
+    env_info_dict = collect_env()
+    env_info = '\n'.join([(f'{k}: {v}') for k, v in env_info_dict.items()])
+    dash_line = '-' * 60 + '\n'
+    logger.info('Environment info:\n' + dash_line + env_info + '\n' +
+                dash_line)
+    meta['env_info'] = env_info
+    meta['config'] = cfg.pretty_text
+    # log some basic info
+    logger.info(f'Distributed training: {distributed}')
+    logger.info(f'Config:\n{cfg.pretty_text}')
 
-            optimizer.step()
+    cfg.device = get_device()
+    # set random seeds
+    seed = init_random_seed(args.seed, device=cfg.device)
+    seed = seed + dist.get_rank() if args.diff_seed else seed
+    logger.info(f'Set random seed to {seed}, '
+                f'deterministic: {args.deterministic}')
+    set_random_seed(seed, deterministic=args.deterministic)
+    cfg.seed = seed
+    meta['seed'] = seed
+    meta['exp_name'] = os.path.basename(args.config)
 
-            if i == 1000:
-                lr_scheduler.step()
+    model = build_detector(
+        cfg.model,
+        train_cfg=cfg.get('train_cfg'),
+        test_cfg=cfg.get('test_cfg'))
+    model.init_weights()
 
-            if (i + 1) % 10 == 0:
-                logger.info(
-                    f"epoch #{epoch + 1} Iteration #{i + 1} loss: {loss_value}"
-                )
+    datasets = [build_dataset(cfg.data.train)]
+    if len(cfg.workflow) == 2:
+        val_dataset = copy.deepcopy(cfg.data.val)
+        val_dataset.pipeline = cfg.data.train.pipeline
+        datasets.append(build_dataset(val_dataset))
+    if cfg.checkpoint_config is not None:
+        # save mmdet version, config file content and class names in
+        # checkpoints as meta data
+        cfg.checkpoint_config.meta = dict(
+            mmdet_version=__version__ + get_git_hash()[:7],
+            CLASSES=datasets[0].CLASSES)
+    # add an attribute for visualization convenience
+    model.CLASSES = datasets[0].CLASSES
+    train_detector(
+        model,
+        datasets,
+        cfg,
+        distributed=distributed,
+        validate=(not args.no_validate),
+        timestamp=timestamp,
+        meta=meta)
 
-            if (i + 1) % 50 == 0:
-                evaluate(model, val_dataloader, device=device)
-                torch.save(
-                    model.state_dict(),
-                    os.path.join(CHECKPOINT_ROOT, f"epoch_{epoch + 1}_iter_{i + 1}.pth")
-                    )
-                logger.info(f"Saved weight: epoch_{epoch + 1}_iter_{i + 1}.pth")
+
+if __name__ == '__main__':
+    main()
