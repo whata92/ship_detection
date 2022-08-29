@@ -1,4 +1,4 @@
 DATASET:
   INFERENCE:
-    IMAGE_FILE: "/workspace/dataset/infer.txt"
-  NUM_CLASS: 2
+    PERCENTILE05: -4.7426
+    PERCENTILE95: 0.3941

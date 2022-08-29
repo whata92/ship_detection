@@ -1,15 +1,53 @@
+import argparse
+import os
+import glob
+
 from mmdet.apis import init_detector, inference_detector
 
-target = "12_6953_16360_7465_16872.jpg"
-# Specify the path to model config and checkpoint file
-config_file = '/home/ubuntu/workspace/ship_detection/model_configs/yolof/yolof_r50_c5_8x8_1x_coco.py'
-checkpoint_file = '/home/ubuntu/workspace/ship_detection/output/epoch_5.pth'
 
-# build the model from a config file and a checkpoint file
-model = init_detector(config_file, checkpoint_file, device='cuda:0')
+def parser():
+    parser = argparse.ArgumentParser(description="Train the model")
+    parser.add_argument(
+        "--img_dir",
+        dest="img_dir",
+        help="Path to the original satellite image",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--output_dir",
+        dest="output_dir",
+        help="Path to the output path",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--model_cfg",
+        dest="model_cfg",
+        help="Path to the config file",
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        "--checkpoint",
+        dest="checkpoint",
+        help="Path to the checkpoint file",
+        type=str,
+        required=True
+    )
+    return parser.parse_args()
 
-# test a single image and show the results
-img = f'/home/ubuntu/workspace/ship_detection/dataset/cropped_512/{target}'  # or img = mmcv.imread(img), which will only load it once
-result = inference_detector(model, img)
-# or save the visualization results to image files
-model.show_result(img, result, out_file=target)
+
+if __name__ == "__main__":
+
+    args = parser()
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    png_list = glob.glob(os.path.join(args.img_dir, "*.png"))
+
+    model = init_detector(args.model_cfg, args.checkpoint, device='cuda:0')
+
+    for png in png_list:
+        out_file = os.path.join(args.output_dir, os.path.basename(png))
+        result = inference_detector(model, png)
+        model.show_result(png, result, out_file=out_file)

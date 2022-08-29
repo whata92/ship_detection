@@ -13,12 +13,32 @@ bash .settings/setup_poetry.sh
 source ~/.bash_profile
 ```
 
-2. Activate poetry bash
+2. Modify gdal version in `pyproject.toml`
+
+Check installed `gdal` version
+
+```bash
+gdal-config --version
+```
+
+If you get version of `3.X.X`, modify gdal version in `pyproject.toml`.
+If error occurs during its installation and the log says,
+```
+error in GDAL setup command: use_2to3 is invalid.
+```
+
+then, do following command.
+```bash
+poetry run pip install -U setuptools==57.5.0
+```
+
+
+3. Activate poetry bash
 ```bash
 poetry shell
 ```
 
-3. Install `torch`, `torchvision`, `mmcv-full` and `mmdet` manually
+4. Install `torch`, `torchvision`, `mmcv-full` and `mmdet` manually
 (Related issue: https://github.com/python-poetry/poetry/issues/2543)
 
 It depends on the cuda version of your system.
