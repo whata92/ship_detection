@@ -1,9 +1,18 @@
 import argparse
 import os
+import sys
 import glob
+import rasterio as rio
+
+sys.path.append(
+    os.path.abspath(
+        os.path.dirname(os.path.abspath(__file__)) + "/../../"
+    )
+)
 
 from mmdet.apis import init_detector, inference_detector
 
+from src.utils.vector_utils import georeference_bboxes
 
 def parser():
     parser = argparse.ArgumentParser(description="Train the model")
@@ -51,3 +60,13 @@ if __name__ == "__main__":
         out_file = os.path.join(args.output_dir, os.path.basename(png))
         result = inference_detector(model, png)
         model.show_result(png, result, out_file=out_file)
+
+        with rio.open(png) as src:
+            transform = src.transform
+
+        with open(png.replace(".png", ".prj")) as fp:
+            prj = fp.read()
+            prj = rio.CRS.from_wkt(prj)
+
+        gdf = georeference_bboxes(result[0], transform, prj)
+        gdf.to_file(png.replace(".png", ".geojson"), driver="GeoJSON")
