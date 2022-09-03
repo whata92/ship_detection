@@ -1,6 +1,7 @@
 import os
 from typing import List, Tuple, Union
-import cv2
+import osgeo.gdal as gdal
+import osgeo.osr as osr
 
 import geopandas as gpd
 import numpy as np
@@ -109,6 +110,32 @@ def crop_raster(
                 save_path = os.path.join(save_dir, os.path.split(crop_img_name)[-1])
 
                 save_patch(src, img, x_min, x_max, y_min, y_max, save_path)
+
+
+def generate_world_file(tif_file: str, gen_prj:bool = True):
+    src = gdal.Open(tif_file)
+    xform = src.GetGeoTransform()
+
+    if gen_prj:
+        src_srs = osr.SpatialReference()
+        src_srs.ImportFromWkt(src.GetProjection())
+        src_srs.MorphToESRI()
+        src_wkt = src_srs.ExportToWkt()
+
+        with open(tif_file.replace('.tif', '.prj'), 'w') as prj:
+            prj.write(src_wkt)
+    src = None
+
+    edit1 = xform[0] + xform[1] / 2
+    edit2 = xform[3] + xform[5] / 2
+
+    with open(tif_file.replace('.tif', '.wld'), 'w') as wld:
+        wld.write("%0.8f\n" % xform[1])
+        wld.write("%0.8f\n" % xform[2])
+        wld.write("%0.8f\n" % xform[4])
+        wld.write("%0.8f\n" % xform[5])
+        wld.write("%0.8f\n" % edit1)
+        wld.write("%0.8f\n" % edit2)
 
 
 def convert_img_to_np(

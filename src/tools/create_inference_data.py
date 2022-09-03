@@ -13,7 +13,9 @@ sys.path.append(
 )
 
 from src.utils.logger import init_log
-from src.utils.raster_utils import crop_raster, convert_img_to_np
+from src.utils.raster_utils import (
+    crop_raster, convert_img_to_np, generate_world_file
+)
 from configs.preprocessing.default import get_cfg_from_file
 
 init_log("global", "info")
@@ -100,4 +102,8 @@ if __name__ == "__main__":
         )
         img_np_log = (img_np_log * 255).astype(np.uint8)
 
+        # Generate png file
         cv2.imwrite(out_filename, img_np_log)
+
+        # Generate world file
+        generate_world_file(tif_img, gen_prj=True)
