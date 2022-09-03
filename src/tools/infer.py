@@ -65,7 +65,7 @@ if __name__ == "__main__":
         with rio.open(png) as src:
             transform = src.transform
 
-        with open(os.path.join(args.output_dir, file_stem + '.prj')) as fp:
+        with open(os.path.join(args.img_dir, file_stem + '.prj')) as fp:
             prj = fp.read()
             prj = rio.CRS.from_wkt(prj)
 
