@@ -3,6 +3,8 @@ import os
 import sys
 import glob
 import rasterio as rio
+import geopandas as gpd
+import pandas as pd
 
 sys.path.append(
     os.path.abspath(
@@ -71,3 +73,14 @@ if __name__ == "__main__":
 
         gdf = georeference_bboxes(result[0], transform, prj)
         gdf.to_file(os.path.join(args.output_dir, file_stem + '.geojson'), driver="GeoJSON")
+
+    geojsons = glob.glob(os.path.join(args.output_dir, '*.geojson'))
+    for i, geojson in enumerate(geojsons):
+        if i == 0:
+            gdf = gpd.read_file(geojson)
+        else:
+            tmp = gpd.read_file(geojson)
+            gdf = pd.concat([gdf, tmp])
+
+    output_stem = args.img_dir.split('/')[-1]
+    gdf.to_file(os.path.join(args.output_dir, output_stem + '.geojson'))
