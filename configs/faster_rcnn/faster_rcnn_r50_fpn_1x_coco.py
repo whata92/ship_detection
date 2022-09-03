@@ -1,8 +1,8 @@
 _base_ = [
-    '/home/ubuntu/workspace/ship_detection/model_configs/_base_/models/faster_rcnn_r50_fpn.py',
-    '/home/ubuntu/workspace/ship_detection/model_configs/_base_/datasets/coco_detection.py',
-    '/home/ubuntu/workspace/ship_detection/model_configs/_base_/schedules/schedule_1x.py',
-    '/home/ubuntu/workspace/ship_detection/model_configs/_base_/default_runtime.py'
+    '../_base_/models/faster_rcnn_r50_fpn.py',
+    '../_base_/datasets/coco_detection.py',
+    '../_base_/schedules/schedule_1x.py',
+    '../_base_/default_runtime.py'
 ]
 model = dict(
     roi_head=dict(
@@ -35,4 +35,4 @@ log_config = dict(  # config to register logger hook
     ])  # The logger used to record the training process.
 # We can use the pre-trained Mask RCNN model to obtain higher performance
 # load_from = '/home/ubuntu/workspace/ship_detection/checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
-work_dir = "output"
+work_dir = "output/faster_rcnn"
