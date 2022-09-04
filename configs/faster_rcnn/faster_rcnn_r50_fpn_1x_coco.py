@@ -4,6 +4,7 @@ _base_ = [
     '../_base_/schedules/schedule_1x.py',
     '../_base_/default_runtime.py'
 ]
+runner = dict(type='EpochBasedRunner', max_epochs=12)
 model = dict(
     roi_head=dict(
         type='StandardRoIHead',

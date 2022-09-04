@@ -86,4 +86,5 @@ if __name__ == "__main__":
             gdf = pd.concat([gdf, tmp])
 
     output_stem = args.img_dir.split('/')[-1]
+    gdf.to_crs(epsg=4326, inplace=True)
     gdf.to_file(os.path.join(args.output_dir, output_stem + '.geojson'))

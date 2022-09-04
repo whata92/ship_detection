@@ -7,3 +7,6 @@ data
 
 # VSCode setting
 *launch.json
+
+# tokens
+.secrets

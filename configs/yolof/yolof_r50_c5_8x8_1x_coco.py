@@ -2,6 +2,7 @@ _base_ = [
     '../_base_/datasets/coco_detection.py',
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
+runner = dict(type='EpochBasedRunner', max_epochs=12)
 model = dict(
     type='YOLOF',
     backbone=dict(
@@ -127,4 +128,4 @@ log_config = dict(  # config to register logger hook
     ])  # The logger used to record the training process.
 # We can use the pre-trained Mask RCNN model to obtain higher performance
 # load_from = '/home/ubuntu/workspace/ship_detection/checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
-work_dir = "output"
+work_dir = "output/yolof"

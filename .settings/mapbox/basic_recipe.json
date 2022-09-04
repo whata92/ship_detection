@@ -1,0 +1,10 @@
+{
+    "version": 1,
+    "layers": {
+        "ship": {
+            "source": "mapbox://tileset-source/wakuhatakeyama/sentinel1-ship",
+            "minzoom": 0,
+            "maxzoom": 12
+        }
+    }
+}
