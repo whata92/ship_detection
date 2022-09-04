@@ -3,8 +3,9 @@ import glob
 import logging
 import os
 import sys
-import numpy as np
+
 import cv2
+import numpy as np
 
 sys.path.append(
     os.path.abspath(
@@ -12,11 +13,10 @@ sys.path.append(
     )
 )
 
-from src.utils.logger import init_log
-from src.utils.raster_utils import (
-    crop_raster, convert_img_to_np, generate_world_file
-)
 from configs.preprocessing.default import get_cfg_from_file
+from src.utils.logger import init_log
+from src.utils.raster_utils import (convert_img_to_np, crop_raster,
+                                    generate_world_file)
 
 init_log("global", "info")
 
