@@ -1,10 +1,11 @@
 import argparse
+import glob
 import os
 import sys
-import glob
-import rasterio as rio
+
 import geopandas as gpd
 import pandas as pd
+import rasterio as rio
 
 sys.path.append(
     os.path.abspath(
@@ -12,9 +13,10 @@ sys.path.append(
     )
 )
 
-from mmdet.apis import init_detector, inference_detector
+from mmdet.apis import inference_detector, init_detector
 
 from src.utils.vector_utils import georeference_bboxes
+
 
 def parser():
     parser = argparse.ArgumentParser(description="Train the model")
@@ -60,6 +62,7 @@ if __name__ == "__main__":
 
     for png in png_list:
         file_stem = os.path.splitext(os.path.basename(png))[0]
+        date = file_stem.split("_")[0]
         out_file = os.path.join(args.output_dir, os.path.basename(png))
         result = inference_detector(model, png)
         model.show_result(png, result, out_file=out_file)
@@ -71,7 +74,7 @@ if __name__ == "__main__":
             prj = fp.read()
             prj = rio.CRS.from_wkt(prj)
 
-        gdf = georeference_bboxes(result[0], transform, prj)
+        gdf = georeference_bboxes(result[0], transform, prj, date)
         gdf.to_file(os.path.join(args.output_dir, file_stem + '.geojson'), driver="GeoJSON")
 
     geojsons = glob.glob(os.path.join(args.output_dir, '*.geojson'))
