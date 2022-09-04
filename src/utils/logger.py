@@ -1,7 +1,6 @@
-import os
 import logging
+import os
 from datetime import datetime
-
 
 LEVELS = {
     "debug": logging.DEBUG,

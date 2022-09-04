@@ -4,10 +4,10 @@ import cv2
 import geopandas as gpd
 import numpy as np
 import rasterio as rio
-from rasterio.features import rasterize
 from affine import Affine
-from shapely.geometry import Polygon
+from rasterio.features import rasterize
 from shapely.affinity import affine_transform
+from shapely.geometry import Polygon
 
 
 def gdf_to_np(
@@ -52,7 +52,8 @@ def gdf_to_np(
 def georeference_bboxes(
     bboxes: np.ndarray,
     transform: Affine,
-    crs: str
+    crs: str,
+    date: str
 ) -> gpd.GeoDataFrame:
     """Georeferencing output bboxes from model output
 
@@ -62,11 +63,13 @@ def georeference_bboxes(
             [[x1, y1, x2, y2, conf], [...] ...]
         transform (Affine): Georeference affine transform matrix
         crs (str): CRS to be referenced
+        date (str): Observation date of the satellite image. (YYYY-MM-DD)
 
     Returns:
         (gpd.GeoDataFrame): Georeferenced bbox
     """
     result = []
+    date_list = [date] * len(bboxes)
     for bbox in bboxes:
         bbox = convert_bbox_to_polygon(bbox[:4])
         transform_for_func = np.array(transform)[[0, 1, 3, 4, 2, 5]]
@@ -75,7 +78,8 @@ def georeference_bboxes(
         result.append(geo_bbox)
     d = {
         "geometry": result,
-        "confidence": bboxes[:, 4]
+        "confidence": bboxes[:, 4],
+        "date": date_list
     }
     output = gpd.GeoDataFrame(d)
     output.set_crs(epsg=crs.to_epsg(), inplace=True)

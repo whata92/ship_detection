@@ -1,7 +1,8 @@
-import os
 import glob
-import xmltodict
 import json
+import os
+
+import xmltodict
 
 
 def XML2JSON(xmlFiles: str, output_json: str):

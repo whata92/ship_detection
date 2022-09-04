@@ -1,8 +1,8 @@
-import os
 import argparse
-import sys
-import logging
 import glob
+import logging
+import os
+import sys
 
 sys.path.append(
     os.path.abspath(
@@ -12,11 +12,7 @@ sys.path.append(
 
 from configs.preprocessing.default import get_cfg_from_file
 from src.utils.logger import init_log
-from src.utils.preprocessing_utils import (
-    crop_image,
-    crop_xml,
-    item2object,
-)
+from src.utils.preprocessing_utils import crop_image, crop_xml, item2object
 
 init_log("global", "info")
 

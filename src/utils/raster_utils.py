@@ -1,10 +1,10 @@
 import os
 from typing import List, Tuple, Union
-import osgeo.gdal as gdal
-import osgeo.osr as osr
 
 import geopandas as gpd
 import numpy as np
+import osgeo.gdal as gdal
+import osgeo.osr as osr
 import rasterio as rio
 from shapely.geometry import Polygon
 
