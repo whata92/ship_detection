@@ -66,4 +66,24 @@ python src/tools/train.py --cfg configs/training/default.yaml
 - log file is stored in `/workspace/logs`
 - checkpoints are created in the `/workspace/checkpoints`
 
+
+## Integrating with Mapbox
+
+1. Create [Mapbox](https://www.mapbox.com/) account
+2. Create token for the project
+    - User need to check `TILESETS.LIST`, `TILESETS.READ` and `TILESETS.WRITE`
+3. Copy token for your environment variable.
+```bash
+export MAPBOX_ACCESS_TOKEN=<YOUR_MAPBOX_ACCESS_TOKEN>
+```
+4. Run following file first
+```bash
+bash scripts/initial_upload_to_mapbox.sh
+```
+5. After second trial, run following command
+```bash
+bash scripts/update_mapbox.sh
+```
+
 ## Reference
+- [Get started using Mapbox Tiling Service and the Tilesets CLI](https://docs.mapbox.com/help/tutorials/get-started-mts-and-tilesets-cli/)
