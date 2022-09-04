@@ -8,6 +8,7 @@ from affine import Affine
 from rasterio.features import rasterize
 from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
+import json
 
 
 def gdf_to_np(
@@ -92,3 +93,23 @@ def convert_bbox_to_polygon(bbox: np.ndarray) -> Polygon:
     x3 = (bbox[2], bbox[3])
     x4 = (bbox[2], bbox[1])
     return Polygon([x1, x2, x3, x4])
+
+
+def convert_geojson_to_geojsonld(
+    geojson: str,
+    output_file: str
+) -> None:
+    """Function to convert geojson to geojsonld (line-deliminated)
+
+    Args:
+        geojson (str): geojson to convert
+        output_file (str): path to output geojsonld file
+    """
+    with open(geojson) as fp:
+        geos = json.load(fp)
+
+    features = geos["features"]
+    features = [json.dumps(feature).replace(" ", "") for feature in features]
+
+    with open(output_file, "w") as fp:
+        fp.write('\n'.join(features))
