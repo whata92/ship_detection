@@ -16,6 +16,7 @@ sys.path.append(
 from mmdet.apis import inference_detector, init_detector
 
 from src.utils.vector_utils import georeference_bboxes
+from src.utils.general_utils import nms
 
 
 def parser():
@@ -48,6 +49,13 @@ def parser():
         type=str,
         required=True
     )
+    parser.add_argument(
+        "--nms_iou",
+        dest="nms_iou",
+        help="Overlap ratio for applying Non maximum suppression. If zero, NMS is not applied",
+        type=float,
+        required=True
+    )
     return parser.parse_args()
 
 
@@ -75,7 +83,16 @@ if __name__ == "__main__":
             prj = rio.CRS.from_wkt(prj)
 
         gdf = georeference_bboxes(result[0], transform, prj, date)
+
+        if args.nms_iou != 0:
+            gdf = nms(gdf, args.nms_iou)
+
         gdf.to_file(os.path.join(args.output_dir, file_stem + '.geojson'), driver="GeoJSON")
+
+    output_stem = args.img_dir.split('/')[-1]
+    integrated_geojson = os.path.join(args.output_dir, output_stem + '.geojson')
+    if os.path.exists(integrated_geojson):
+        os.remove(integrated_geojson)
 
     geojsons = glob.glob(os.path.join(args.output_dir, '*.geojson'))
     for i, geojson in enumerate(geojsons):
@@ -85,6 +102,9 @@ if __name__ == "__main__":
             tmp = gpd.read_file(geojson)
             gdf = pd.concat([gdf, tmp])
 
-    output_stem = args.img_dir.split('/')[-1]
+    if args.nms_iou != 0:
+        gdf = nms(gdf, args.nms_iou)
+
     gdf.to_crs(epsg=4326, inplace=True)
-    gdf.to_file(os.path.join(args.output_dir, output_stem + '.geojson'))
+    gdf.sort_values(by='confidence', inplace=True, ascending=False)
+    gdf.to_file(integrated_geojson)
