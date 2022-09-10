@@ -4,11 +4,11 @@ import shutil
 
 sys.path.append(
     os.path.abspath(
-        os.path.dirname(os.path.abspath(__file__)) + "/../"
+        os.path.dirname(os.path.abspath(__file__)) + "/../../"
     )
 )
 
-from utils.preprocessing_utils import (
+from src.utils.preprocessing_utils import (
     crop_image,
     crop_xml,
     check_bbox_inside
@@ -27,7 +27,7 @@ def test_crop_img(default_path):
     finally:
         pass
         # shutil.rmtree(out_dir)
-    
+
 
 def test_crop_xml(default_path):
     xml_file = default_path["xml"]
