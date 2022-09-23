@@ -113,3 +113,21 @@ def convert_geojson_to_geojsonld(
 
     with open(output_file, "w") as fp:
         fp.write('\n'.join(features))
+
+
+def convert_polygon_to_point(
+    geojson: str,
+    output_file: str
+) -> None:
+    """Function to convert polygon geojson to point geojson
+
+    Args:
+        geojson (str): geojson to convert
+        output_file (str): path to output geojson file
+    """
+    gdf = gpd.read_file(geojson)
+
+    centers = gdf['geometry'].centroid
+    gdf['geometry'] = centers
+
+    gdf.to_file(output_file, driver='GeoJSON')
