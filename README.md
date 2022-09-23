@@ -2,7 +2,13 @@
 
 ## Overview
 
-Ship detection for Sentinel-1 SAR image
+Ship detection for Sentinel-1 SAR image.
+In this repository, ship detection engine is provided.
+
+The overall result can be accessed from web viewer as follows.
+![image](./.assets/ship_detection.png)
+
+Viewer's code will be available soon.
 
 
 ## Installation
